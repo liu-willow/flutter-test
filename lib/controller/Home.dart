@@ -5,6 +5,7 @@ import 'dart:math';
 
 import 'package:get/get.dart';
 import 'package:wallet_test/components/file/file.dart';
+import 'package:wallet_test/components/neffos.dart';
 import 'package:wallet_test/curl/client/client.dart';
 
 import 'package:wallet_test/data/nft.dart';
@@ -24,14 +25,17 @@ class Home extends GetxController {
 
   CURL curl = CURL();
   WEB3 web3 = WEB3();
+  Neffos neffos = Neffos();
 
   @override
   void onInit() async {
     super.onInit();
     refreshList();
 
-    web3.chainId();
-    web3.getLogs();
+    // web3.chainId();
+    // web3.getLogs();
+
+    neffos.connect();
   }
 
   int rand(int min, int max) => min + Random().nextInt(max - min);
@@ -44,7 +48,6 @@ class Home extends GetxController {
   void refreshList() async {
     try {
       page = 0;
-      // nftData = RxList<Nft>();
       nftData.removeRange(0, nftData.length);
       getNftList();
     } catch(e) {
@@ -54,8 +57,7 @@ class Home extends GetxController {
   void getNftList() async {
     try {
       page++;
-      var list = await curl.nftList(page, limit);
-      nftData.addAll(list);
+      nftData.addAll(await curl.nftList(page, limit));
     } catch(e) {
       logger.e(e);
     }
