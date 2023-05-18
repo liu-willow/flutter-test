@@ -18,7 +18,7 @@ class Conn {
 
   bool? closed;
 
-  Map<String, NsConn> connectedNamespaces;
+  Map<String, NsConn>? connectedNamespaces;
 
   String? id;
   int? reconnectTries;
@@ -83,7 +83,7 @@ class Conn {
       return Future.error(err);
     }
 
-    connectedNamespaces[namespace] = ns;
+    connectedNamespaces![namespace] = ns;
 
     connectMessage.event = OnNamespaceConnected;
 
@@ -106,14 +106,14 @@ class Conn {
       isLocal: true,
     );
 
-    connectedNamespaces.forEach((_, NsConn ns) {
+    connectedNamespaces?.forEach((_, NsConn ns) {
       ns.forceLeaveAll(true);
 
       disconnectMsg.namespace = ns.namespace;
 
       fireEvent(ns, disconnectMsg);
 
-      connectedNamespaces.remove(ns.namespace);
+      connectedNamespaces?.remove(ns.namespace);
     });
     waitingMessages?.clear();
     closed = true;
@@ -129,7 +129,7 @@ class Conn {
   bool? get isAcknowledged => _isAcknowledged;
   bool? get isClosed => closed;
   NsConn? namespace(String namespace) {
-    return connectedNamespaces[namespace];
+    return connectedNamespaces![namespace];
   }
 
   Future<NsConn> waitServerConnect(String namespace) {
@@ -146,7 +146,7 @@ class Conn {
   Conn(
       this.channel,
       this.namespaces,
-      this.connectedNamespaces
+      // this.connectedNamespaces
       ) {
     _init();
   }
@@ -156,6 +156,7 @@ class Conn {
     reconnectTries = 0;
     queue = <String>[];
     waitingMessages = <String, WaitingMessageFunc>{};
+    connectedNamespaces = <String, NsConn>{};
     closed = false;
     stream?.listen((data) => _onMessage(data), onError: _onError, onDone: _onDone);
   }
@@ -183,8 +184,8 @@ class Conn {
 
     //isRrror ???
     if(toMessage.namespace != "" && toMessage.event != "") {
-      if (connectedNamespaces.containsKey(toMessage.namespace)) {
-        NsConn? nsConn = connectedNamespaces[toMessage.namespace];
+      if (connectedNamespaces?.containsKey(toMessage.namespace) as bool) {
+        NsConn? nsConn = connectedNamespaces![toMessage.namespace];
         Map<String, MessageHandlerFunc>? event = getEvents(namespaces, toMessage.namespace!);
         MessageHandlerFunc? handle = toMessage.wait == "" ? event![toMessage.event] : event![toMessage.wait];
         if (handle != null) {
