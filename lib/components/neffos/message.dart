@@ -14,7 +14,7 @@ class Message {
   bool? isNative;
   bool? isNoOp;
   String? namespace;
-  String? room;
+  String? room = '';
   bool? setBinary;
   String? wait;
   bool get isConnect => event == OnNamespaceConnect;
@@ -46,7 +46,7 @@ class Message {
     this.isNative,
     this.isNoOp,
     this.namespace,
-    this.room,
+    this.room = '',
     this.setBinary,
     this.wait,
   });

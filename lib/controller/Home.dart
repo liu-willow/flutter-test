@@ -32,8 +32,8 @@ class Home extends GetxController {
     super.onInit();
     refreshList();
 
-    // web3.chainId();
-    // web3.getLogs();
+    web3.chainId();
+    web3.getLogs();
 
     neffos.connect();
   }

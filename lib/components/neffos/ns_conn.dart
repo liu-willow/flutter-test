@@ -1,3 +1,7 @@
+import 'dart:async';
+
+import 'package:wallet_test/logger/logger.dart';
+
 import 'conn.dart';
 import 'message.dart';
 import 'room.dart';
@@ -7,6 +11,7 @@ class NsConn {
   Map<String, MessageHandlerFunc>? events;
   String? namespace;
   Map<String, Room>? rooms;
+
   NsConn({
     this.conn,
     this.events,
@@ -14,9 +19,10 @@ class NsConn {
     this.rooms,
   });
 
-  Future<Message> ask(String event, body) {
-    // TODO: implement ask
-    throw UnimplementedError();
+  void ask(String event, body, WaitingMessageFunc callback) async {
+    String wait = genWait();
+    conn?.waitingMessages[wait] = callback;
+    conn?.ask(Message(wait: wait, namespace: namespace, event: event, body: body));
   }
 
   Future<Room> askRoomJoin(String roomName) {

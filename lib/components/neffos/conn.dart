@@ -29,7 +29,38 @@ class Conn {
     _isAcknowledged = false;
     reconnectTries = 0;
     closed = false;
-    stream?.listen((data) => _onMessage(data), onError: _onError, onDone: _onDone);
+    stream?.listen((data) async {
+      Message toMessage = Message.fromString(data);
+      if (toMessage.event == OnNamespaceConnect) {
+        id = data;
+        return;
+      }
+      NsConn? nsConn = connectedNamespaces[toMessage.namespace];
+      if(toMessage.wait == "" && toMessage.namespace != "" && toMessage.event != "") {
+        if (connectedNamespaces.containsKey(toMessage.namespace)) {
+          SocketError? err = fireEvent(nsConn!, toMessage);
+          if (err != null) {
+            return Future.error(err);
+          }
+        }
+      }
+
+      if(toMessage.wait != "" && toMessage.namespace != "" && toMessage.event != "") {
+        if (connectedNamespaces.containsKey(toMessage.namespace)) {
+          // nsConn?.$add(toMessage.wait!, toMessage);
+          waitingMessages[toMessage.wait!]!(toMessage);
+        }
+
+      }
+    },
+        onError: (err) async {
+          close();
+        },
+        onDone: () {
+          if (!isClosed!) {
+            close();
+          }
+        });
   }
 
   Future<NsConn> connect(String namespace) async {
@@ -41,16 +72,16 @@ class Conn {
       if (isClosed!) {
         return Future.error(errorClosed);
       }
-      msg.wait = getWait();
-      messageH(Message receive) {
-        loggerNoStack.w("messageH: $receive");
-        if (receive.isError!) {
-          return Future.error(receive.err!);
-        }
-        return Future.value(receive);
-      }
-
-      waitingMessages[msg.wait!] = messageH;
+      msg.wait = msg.wait != '' ? msg.wait : genWait();
+      // messageH(Message receive) {
+      //   loggerNoStack.w("messageH: $receive");
+      //   if (receive.isError!) {
+      //     return Future.error(receive.err!);
+      //   }
+      //   return Future.value(receive);
+      // }
+      //
+      // waitingMessages[msg.wait!] = messageH;
 
       if (!write(msg)) {
         return Future.error(errWrite);
@@ -67,7 +98,7 @@ class Conn {
       return nsConn;
     }
 
-    Map<String, MessageHandlerFunc>? events = getEvents(namespaces, namespace);
+    Map<String, MessageHandlerFunc>? events = namespaces[namespace];
 
     if (events == null) {
       return Future.error(errBadNamespace);
@@ -141,42 +172,11 @@ class Conn {
       }
     }
 
-    String data = serializeMessage(msg);
-    return _write(data);
+    return _write(msg.toString());
   }
 
   void writeEmptyReply(String wait) {
     // TODO: implement writeEmptyReply
-  }
-
-  Future<void> _onMessage(String msg) async {
-    Message toMessage = Message.fromString(msg);
-    if (toMessage.event == OnNamespaceConnect) {
-      id = msg;
-      return;
-    }
-
-    if(toMessage.namespace != "" && toMessage.event != "") {
-      if (connectedNamespaces.containsKey(toMessage.namespace)) {
-        NsConn? nsConn = connectedNamespaces[toMessage.namespace];
-        SocketError? err = fireEvent(nsConn!, toMessage);
-        if (err != null) {
-          return Future.error(err);
-        }
-      }
-    }
-    loggerNoStack.w("-------------------------------------------------------------");
-    loggerNoStack.w(msg);
-  }
-
-  Future<void> _onError(err) async {
-    close();
-  }
-
-  Future<void> _onDone() async {
-    if (!isClosed!) {
-      close();
-    }
   }
 
   bool _write(dynamic data) {
@@ -202,14 +202,4 @@ SocketError? fireEvent(NsConn ns, Message msg) {
   return null;
 }
 
-String serializeMessage(Message msg) => msg.toString();
-
-String getWait() {
-  Stopwatch s = Stopwatch()..start();
-
-  return waitComesFromClientPrefix + s.elapsedMicroseconds.toString();
-}
-
-Map<String, MessageHandlerFunc>? getEvents(Map<String, Map<String, MessageHandlerFunc>> namespaces, String namespace,) {
-  return namespaces[namespace];
-}
+String genWait() => waitComesFromClientPrefix + DateTime.now().microsecondsSinceEpoch.toString();
