@@ -1,7 +1,5 @@
 import 'dart:async';
 
-import 'package:wallet_test/logger/logger.dart';
-
 import 'conn.dart';
 import 'message.dart';
 import 'room.dart';

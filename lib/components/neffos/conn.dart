@@ -1,4 +1,3 @@
-import 'package:wallet_test/logger/logger.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
 import 'event.dart';
