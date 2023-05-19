@@ -1,17 +1,13 @@
-import 'package:json_annotation/json_annotation.dart';
-import 'event.dart';
-part 'message.g.dart';
+import 'dart:convert';
 
-@JsonSerializable()
+import 'event.dart';
+
 class Message {
   final String _split = ';';
   String? body;
   String? err;
   String? event;
-
-  @JsonKey(nullable: true)
   bool? isError;
-
   bool? isForced;
   bool? isInvalid;
   bool? isLocal;
@@ -32,9 +28,11 @@ class Message {
     return wait!.startsWith(waitComesFromClientPrefix);
   }
 
-  T unmarshal<T>() {
-    // TODO: implement unmarshal
-    throw UnimplementedError();
+  Map<String, dynamic> unmarshal<T>() {
+    Map<String, dynamic> JSON = toJson();
+    dynamic body = jsonDecode(JSON['body']);
+    JSON['body'] = body;
+    return JSON;
   }
 
   Message({
@@ -53,12 +51,47 @@ class Message {
     this.wait,
   });
 
-  /// Create a new instance from a json
-  factory Message.fromJson(Map<String, dynamic> json) => _$MessageFromJson(json);
+  factory Message.fromJson(Map<String, dynamic> json) {
+    return Message(
+      namespace: json['namespace'] as String,
+      isLocal: json['isLocal'] as bool,
+      event: json['event'] as String,
+      wait: json['wait'] as String,
+      room: json['room'] as String,
+      err: json['err'] as String,
+      isError: json['isError'] as bool,
+      body: json['body'] as String,
+    );
+  }
 
-  factory Message.fromString(String data) => _$MessageFromString(data);
-  /// Serialize to json
-  Map<String, dynamic> toJson() => _$MessageToJson(this);
+  factory Message.fromString(String data) {
+    List arr = data.split(";");
+
+    return Message(
+        wait: arr[0],
+        isLocal: false,
+        isNative: false,
+        namespace: arr.length > 1 ? arr[1] : '',
+        room: arr.length > 1 ? arr[2] : '',
+        event: arr.length > 1 ? arr[3] : OnNamespaceConnect,
+        isError: arr.length > 1 ? arr[4] == "" : false,
+        isNoOp: arr.length > 1 ? arr[5] == "" : false,
+        body: arr.length > 1 ? arr[6] : ''
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return <String, dynamic>{
+      'namespace': namespace,
+      'isLocal': isLocal,
+      'event': event,
+      'wait': wait,
+      'room': room,
+      'err': err,
+      'isError': isError,
+      'body': body,
+    };
+  }
 
   @override
   String toString() {
@@ -81,19 +114,19 @@ class Message {
     required String wait,
   }) {
     return Message(
-      body: body ?? this.body,
-      err: err ?? this.err,
-      event: event ?? this.event,
-      isError: isError ?? this.isError,
-      isForced: isForced ?? this.isForced,
-      isInvalid: isInvalid ?? this.isInvalid,
-      isLocal: isLocal ?? false,
-      isNative: isNative ?? this.isNative,
-      isNoOp: isNoOp ?? this.isNoOp,
-      namespace: namespace ?? this.namespace,
-      room: room ?? this.room,
-      setBinary: setBinary ?? this.setBinary,
-      wait: wait ?? this.wait,
+      body: body,
+      err: err,
+      event: event,
+      isError: isError,
+      isForced: isForced,
+      isInvalid: isInvalid,
+      isLocal: isLocal,
+      isNative: isNative,
+      isNoOp: isNoOp,
+      namespace: namespace,
+      room: room,
+      setBinary: setBinary,
+      wait: wait,
     );
   }
 }

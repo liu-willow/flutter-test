@@ -9,4 +9,14 @@ WebSocketChannel connectWebSocket(String url,
       Map<String, dynamic>? headers,
       Duration? pingInterval,
       Duration? connectTimeout
-    }) => HtmlWebSocketChannel.connect(url, protocols: protocols);
+    }) {
+  List<String> query = <String>[];
+  headers?.forEach((key, value) {
+    query.add("$key=$value");
+  });
+  if (query.isNotEmpty) {
+    String queryString = query.join("&");
+    url = "$url?$queryString";
+  }
+  return HtmlWebSocketChannel.connect(url, protocols: protocols);
+}

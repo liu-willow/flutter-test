@@ -59,7 +59,8 @@ class Neffos {
           "0x937a42e7c244fa6c3d4b449299c4b6e5a7ee3c47": (NsConn ns, Message msg) {
             loggerNoStack.d(<String, dynamic>{
               "event": "---------------------------------------",
-              "data": jsonDecode(msg.body!) as Map<String, dynamic>
+              "connId": ns.conn?.id,
+              "data": msg.unmarshal()
             });
           }
         }
@@ -69,7 +70,6 @@ class Neffos {
           headers: {
             'sync': 'Q96MLCQjiSQT0kGUZBKA5r6k/Kb2a+IYkojzt9Zawo+fIjWD5PpkilOPdnwKttbOyf0OLsYiP9cYXkdA+ykPd5SZ6iuAXuGoSX3QJEf72Hs+ekrwhiJwT/vcRp8jq0IrZ+w3HXQeQDwJMjBnj/aI8Hq6mMlQ99ow548iIl9z229wOVgvxlVLB1J8zhFbG87ObSMH4NGCaDHWwIq9RTUyl/Duq+TU9L3SFO8dUc7Kt5z/zlE+jvoMmwR7r/k5c43fIOM7zsWMrBonK4DuGSG+Qj6Yy33Kn5u6H4nkAMZmLm0=',
           }
-
       );
       // loggerNoStack.w(conn.id);
       NsConn nsConn = await conn.connect("137");

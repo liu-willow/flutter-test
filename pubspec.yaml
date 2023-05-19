@@ -38,7 +38,6 @@ dependencies:
   web3dart: 2.3.5
   logger: ^1.3.0
   web_socket_channel:
-  json_serializable:
   path: ^1.8.0
 
   # The following adds the Cupertino Icons font to your application.
